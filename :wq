@@ -65,9 +65,9 @@
      (let ((l1 (gensym))
      (l2 (gensym)))
      (seq (Label (symbol->label f))
-	  (Cmp 'r8 (length xs))
-	  (Jl 'raise_error_align)
           (Sub 'r8 (length xs))
+          (Cmp 'r8 0)
+          (Jl 'raise_error_align)
           (Mov rax val-empty)
           (Label l1)
           (Cmp 'r8 0)
@@ -86,27 +86,24 @@
           (Add rsp (* 8 (length (cons x (reverse xs)))))
           (Ret)))]
      [(FunCase ds) (seq (Label (symbol->label f))
-      		        (compile-helper f ds))]
+      (compile-help f ds))]
       [_
         (seq)]))
 
-(define (compile-helper f ds)
+(define (compile-help f ds)
     (match ds
       ['() (seq (Jmp 'raise_error_align))]
       [(cons d ds)
        (match d
       [(FunPlain xs e)
-       (let ((l1 (gensym))
-	     (l2 (gensym)))
+       (let ((l1 (gensym)))
        (seq (Cmp 'r8 (length xs))
-            (Je l1)
-	    (compile-helper f ds)
-            (Jmp l2)
+            (Jne l1)
+            (compile-e e (reverse xs))
+            (Add rsp (* 8 (length xs)))
+            (Ret)
             (Label l1)
-	    (compile-e e (reverse xs))
-	    (Add rsp (* 8 (length xs)))
-	    (Label l2)
-	    (Ret)))]
+            (compile-help f ds)))]
 [(FunRest xs x e)
   (let ((l1 (gensym 'rest))
         (l2 (gensym 'rest))
@@ -118,7 +115,7 @@
        (Mov rax val-empty)
        (Label l1)
        (Cmp 'r10 0)
-       (Je l2)
+       (Je l2))
        (Mov (Offset rbx 0) rax)
        (Pop rax)
        (Mov (Offset rbx 8) rax)
@@ -133,7 +130,7 @@
        (Add rsp (* 8 (length (cons x (reverse xs)))))
        (Ret)
        (Label l3)
-       (compile-helper f ds)))])]))
+       (compile-help f ds)))])]))
 
 
 

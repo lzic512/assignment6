@@ -154,6 +154,15 @@
                 45)
 
   (check-equal? (run
+		                   '(define (f x) x)
+				                    '(f 5 6))
+		                'err)
+  (check-equal? (run
+		                   '(define (f x y) x)
+				                    '(f 5))
+		                'err)
+
+  (check-equal? (run
                  '(define (even? x)
                     (if (zero? x)
                         #t
@@ -255,6 +264,9 @@
   (check-equal? (run '(define (f) 1)
                      '(apply f '()))
                 1)
+  (check-equal? (run '(define (f . xs) xs)
+		                          '(apply f (cons 3 '())))
+		                '(3))
   (check-equal? (run '(define (f . xs) 1)
                      '(apply f '()))
                 1)
